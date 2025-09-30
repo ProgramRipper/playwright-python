@@ -72,6 +72,12 @@ base_wheel_bundles = [
         "platform": "win32",
         "zip_name": "win32_arm64",
     },
+    {
+        "wheel": "any.whl",
+        "machine": platform.machine().lower(),
+        "platform": sys.platform,
+        "zip_name": "",
+    },
 ]
 
 if len(sys.argv) == 2 and sys.argv[1] == "--list-wheels":
@@ -120,9 +126,6 @@ def download_driver(zip_name: str) -> None:
 class PlaywrightBDistWheelCommand(BDistWheelCommand):
     def run(self) -> None:
         super().run()
-        os.makedirs("driver", exist_ok=True)
-        os.makedirs("playwright/driver", exist_ok=True)
-        self._download_and_extract_local_driver()
 
         wheel = None
         if os.getenv("PLAYWRIGHT_TARGET_WHEEL", None):
@@ -142,7 +145,11 @@ class PlaywrightBDistWheelCommand(BDistWheelCommand):
                 )
             )[0]
         assert wheel
-        self._build_wheel(wheel)
+        if wheel["zip_name"]:
+            os.makedirs("driver", exist_ok=True)
+            os.makedirs("playwright/driver", exist_ok=True)
+            self._download_and_extract_local_driver()
+            self._build_wheel(wheel)
 
     def _build_wheel(
         self,

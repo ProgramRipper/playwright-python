@@ -16,8 +16,8 @@ import asyncio
 from typing import Any
 
 from playwright._impl._connection import Connection
+from playwright._impl._fake_pipe import FakePipeTransport
 from playwright._impl._object_factory import create_remote_object
-from playwright._impl._transport import PipeTransport
 from playwright.async_api._generated import Playwright as AsyncPlaywright
 
 
@@ -31,7 +31,7 @@ class PlaywrightContextManager:
         self._connection = Connection(
             None,
             create_remote_object,
-            PipeTransport(loop),
+            FakePipeTransport(loop),
             loop,
         )
         loop.create_task(self._connection.run())

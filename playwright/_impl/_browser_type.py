@@ -44,9 +44,9 @@ from playwright._impl._helper import (
     async_readfile,
     locals_to_params,
 )
-from playwright._impl._json_pipe import JsonPipeTransport
 from playwright._impl._network import serialize_headers, to_client_certificates_protocol
 from playwright._impl._waiter import throw_on_timeout
+from playwright._impl._ws_pipe import WsPipeTransport
 
 if TYPE_CHECKING:
     from playwright._impl._playwright import Playwright
@@ -224,21 +224,14 @@ class BrowserType(ChannelOwner):
             slowMo = 0
 
         headers = {**(headers if headers else {}), "x-playwright-browser": self.name}
-        local_utils = self._connection.local_utils
-        pipe_channel = (
-            await local_utils._channel.send_return_as_dict(
-                "connect",
-                None,
-                {
-                    "wsEndpoint": wsEndpoint,
-                    "headers": headers,
-                    "slowMo": slowMo,
-                    "timeout": timeout if timeout is not None else 0,
-                    "exposeNetwork": exposeNetwork,
-                },
-            )
-        )["pipe"]
-        transport = JsonPipeTransport(self._connection._loop, pipe_channel)
+        transport = WsPipeTransport(
+            self._connection._loop,
+            ws_endpoint=wsEndpoint,
+            headers=headers,
+            slow_mo=slowMo,
+            timeout=timeout if timeout is not None else 0,
+            expose_network=exposeNetwork,
+        )
 
         connection = Connection(
             self._connection._dispatcher_fiber,
